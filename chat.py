@@ -111,9 +111,10 @@ if prompt:
             tool_choice="auto"
         ):
             print(response)
-            if response.choices[0].delta.tool_calls[0]:
-                # Extract function information
-                tool_call = response.choices[0].tool_calls[0]
+            if response.choices[0].delta.tool_calls is None:
+                pass
+            elif response.choices[0].delta.tool_calls:
+                tool_call = response.choices[0].delta.tool_calls[0]
                 function_name = tool_call.function.name
                 function_params = json.loads(tool_call.function.arguments)
 
@@ -123,27 +124,16 @@ if prompt:
                 # Append the function result as a new tool message
                 st.session_state.messages.append(ChatMessage(role="tool", name=function_name, content=function_result))
 
+                # Update the full_response with the function result
+                full_response += function_result
+
                 # Break the stream to process the next message with the function result
                 break
             else:
                 full_response += (response.choices[0].delta.content or "")
                 message_placeholder.markdown(full_response + "▌")
-        message_placeholder.markdown(full_response)
 
-    # If the model's response contains a tool call, we need to continue the conversation with the new tool message
-    if response.choices[0].message.tool_calls[0]:
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
-            for response in client.chat_stream(
-                model=st.session_state["mistral_model"],
-                messages=st.session_state.messages,
-                tools=tools,
-                tool_choice="auto"
-            ):
-                full_response += (response.choices[0].delta.content or "")
-                message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
+        message_placeholder.markdown(full_response)
 
     # Append the assistant's response to the session state
     st.session_state.messages.append(ChatMessage(role="assistant", content=full_response))

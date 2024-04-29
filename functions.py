@@ -1,24 +1,12 @@
 import yfinance as yf
 
 def get_stock_price(ticker):
-    """
-    Fetches the current stock price for a given ticker symbol using the yfinance library.
-
-    Args:
-        ticker (str): The ticker symbol for the stock of interest.
-
-    Returns:
-        float: The current stock price for the given ticker symbol.
-    """
-
-    # Create a Yahoo Finance Ticker object
-    ticker_data = yf.Ticker(ticker)
-
-    # Get the latest market data for the ticker
-    current_price = ticker_data.info['regularMarketPrice']
-    print(current_price)
-
-    return current_price
+    try:
+        ticker = yf.Ticker(ticker)
+        data = ticker.history(period="1d")
+        return f"The latest closing price is {data['Close'][0]}"
+    except Exception as e:
+        print("Failed to get required data.", e)
 
 # # User inputs the ticker symbol
 # ticker = input("Enter the ticker symbol for the stock you want to check: ")
