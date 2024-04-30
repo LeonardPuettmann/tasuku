@@ -89,7 +89,7 @@ tools = [
 ]
 
 names_to_functions = {
-    "get_stock_price": functools.partial(get_stock_price, ticker="MSFT")
+    "get_stock_price": functools.partial(get_stock_price)
 }
 
 # Section 5: User Input and Response
@@ -112,7 +112,8 @@ if prompt:
         ):
             print(response)
             if response.choices[0].delta.tool_calls is None:
-                pass
+                full_response += (response.choices[0].delta.content or "")
+                message_placeholder.markdown(full_response + "▌")
             elif response.choices[0].delta.tool_calls:
                 tool_call = response.choices[0].delta.tool_calls[0]
                 function_name = tool_call.function.name
@@ -121,19 +122,14 @@ if prompt:
                 # Execute the function
                 function_result = names_to_functions[function_name](**function_params)
 
-                # Append the function result as a new tool message
-                st.session_state.messages.append(ChatMessage(role="tool", name=function_name, content=function_result))
-
                 # Update the full_response with the function result
                 full_response += function_result
 
                 # Break the stream to process the next message with the function result
                 break
-            else:
-                full_response += (response.choices[0].delta.content or "")
-                message_placeholder.markdown(full_response + "▌")
 
         message_placeholder.markdown(full_response)
 
     # Append the assistant's response to the session state
     st.session_state.messages.append(ChatMessage(role="assistant", content=full_response))
+    print(st.session_state.messages)
