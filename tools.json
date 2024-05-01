@@ -1,0 +1,36 @@
+[
+    {
+      "type": "function",
+      "function": {
+        "name": "get_stock_price",
+        "description": "Get the price of any stock from Yahoo Finance.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "description": "The ticker symbol of the stock."
+            }
+          },
+          "required": ["ticker"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "bing_search",
+        "description": "Do a web search via Bing",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The search query from a user."
+            }
+          },
+          "required": ["query"]
+        }
+      }
+    }
+  ]
