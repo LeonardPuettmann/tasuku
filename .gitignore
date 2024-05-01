@@ -1,3 +1,4 @@
 ms_graph_api_token.json
 cal.py
 o365_token.txt
+.env

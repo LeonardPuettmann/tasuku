@@ -1,6 +1,6 @@
 import yfinance as yf
+import sqlite3
 import requests
-import json
 import os
 
 def get_stock_price(ticker: str) -> str:
@@ -47,3 +47,12 @@ def bing_search(query, market="de-DE", response_size="full") -> str:
         return output
     elif response_size == "compact":
         return search_results["webPages"]["value"][0]["snippet"]
+
+
+def save_todo(task):
+    conn = sqlite3.connect('todos.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS todos (task TEXT)''')
+    c.execute("INSERT INTO todos VALUES (?)", (task,))
+    conn.commit()
+    conn.close()

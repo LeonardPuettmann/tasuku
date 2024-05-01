@@ -1,2 +1,5 @@
 mistralai
 streamlit
+yfinance
+requests
+pillow
