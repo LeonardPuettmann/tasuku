@@ -8,7 +8,7 @@ import json
 
 # functions 
 import functools
-from tools import get_stock_price, bing_search
+from tools import get_stock_price, bing_search, save_todo, read_todos
 
 # Function to reset the state
 def reset_state():
@@ -16,7 +16,7 @@ def reset_state():
         del st.session_state[key]
 
 
-im = Image.open("favicon.png")
+im = Image.open("./images/favicon.png")
 st.set_page_config(
     page_title="Tasuku",
     page_icon=im,
@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 with st.sidebar:
-    st.title(":orange[佑 Tasuku]")
+    st.title(":red[佑 Tasuku]")
     st.write('This chatbot is created using the Mistral AI models. Tasuku means "help" or "assist" in japanese.')
     # Section 1: API Key and Client Setup
     # Get the API key from the environment variables or the user
@@ -51,10 +51,10 @@ with st.sidebar:
     # Initialize the model in session state if it's not already set
     st.subheader('Models and parameters')
     if "mistral_model" not in st.session_state:
-        st.session_state["mistral_model"] = 'mistral-large-latest'
+        st.session_state["mistral_model"] = 'open-mistral-7b'
 
     # Always display the dropdown
-    model_options = ('mistral-small-latest', 'open-mixtral-8x22b', 'mistral-large-latest')
+    model_options = ('open-mistral-7b','open-mixtral-8x22b', 'mistral-small-latest', 'mistral-large-latest')
     st.session_state["mistral_model"] = st.selectbox('Select a model', model_options, index=model_options.index(st.session_state["mistral_model"]), key="model_select")
 
     # Section 3: System Prompt Input
@@ -76,7 +76,6 @@ with st.sidebar:
     """
     )
 
-
 # Section 4: Message Handling
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -86,10 +85,11 @@ if st.session_state["system_prompt"] and not any(message.role == "system" for me
     st.session_state.messages.insert(0, ChatMessage(role="system", content=st.session_state["system_prompt"]))
 
 # Display messages
+avatar_paths = {"user": "./images/user.ico", "assistant": "./images/robot.ico"}
 for message in st.session_state.messages:
-    if message.role != "system":  # Skip system messages for UI
-        with st.chat_message(message.role):  # Use dot notation here
-            st.markdown(message.content)  # And here
+    if message.role != "system":
+        with st.chat_message(message.role, avatar=avatar_paths.get(message.role)):
+            st.markdown(message.content)
             
 # Section 4.5: Set the tool use of our model
 with open('tools.json') as f:
@@ -97,7 +97,9 @@ with open('tools.json') as f:
 
 names_to_functions = {
     "get_stock_price": functools.partial(get_stock_price),
-    "bing_search": functools.partial(bing_search)
+    "bing_search": functools.partial(bing_search),
+    "save_todo": functools.partial(save_todo),
+    "read_todo": functools.partial(read_todos)
 }
 
 # Section 5: User Input and Response
@@ -106,26 +108,29 @@ prompt = st.chat_input("Message me...")
 if prompt:
     new_message = ChatMessage(role="user", content=prompt)
     st.session_state.messages.append(new_message)
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="./images/user.ico"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="./images/robot.ico"):
         message_placeholder = st.empty()
         full_response = ""
         function_result = ""  # Initialize function_result to an empty string
+        model_params = {
+            "model": st.session_state["mistral_model"],
+            "messages": st.session_state.messages,
+            "temperature": temperature,
+            "top_p": top_p,
+            "max_tokens": max_tokens
+        }
+        if st.session_state["mistral_model"] != "open-mistral-7b":
+            model_params["tools"] = tools
+            model_params["tool_choice"] = "auto"
+
         while True:
-            for response in client.chat_stream(
-                model=st.session_state["mistral_model"],
-                messages=st.session_state.messages,
-                tools=tools,
-                tool_choice="auto",
-                temperature=temperature,
-                top_p=top_p,
-                max_tokens=max_tokens
-            ):
+            for response in client.chat_stream(**model_params):
                 if response.choices[0].delta.tool_calls is None:
                     full_response += (response.choices[0].delta.content or "")
-                    message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(full_response + "|")
                 elif response.choices[0].delta.tool_calls:
                     tool_call = response.choices[0].delta.tool_calls[0]
                     function_name = tool_call.function.name
@@ -147,7 +152,7 @@ if prompt:
         # Only display the message if it's not a function result
         if not function_result in full_response:
             message_placeholder.markdown(full_response)
-            
+
         # Remove the function result message from st.session_state.messages
         if function_result:
             st.session_state.messages = [message for message in st.session_state.messages if message.content != function_result]

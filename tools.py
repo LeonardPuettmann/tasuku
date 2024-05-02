@@ -1,4 +1,5 @@
 import yfinance as yf
+import datetime
 import sqlite3
 import requests
 import os
@@ -49,10 +50,30 @@ def bing_search(query, market="de-DE", response_size="full") -> str:
         return search_results["webPages"]["value"][0]["snippet"]
 
 
-def save_todo(task):
+def save_todo(task: str) -> str:
+    """
+    @param task: A string with a to do
+    @return: Message that function has been executed.
+    """
+    current_date = datetime.date.today().strftime('%Y-%m-%d')
+
     conn = sqlite3.connect('todos.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS todos (task TEXT)''')
-    c.execute("INSERT INTO todos VALUES (?)", (task,))
+    c.execute('''CREATE TABLE IF NOT EXISTS todos (date TEXT, task TEXT)''')
+    c.execute("INSERT INTO todos VALUES (?, ?)", (current_date, task))
     conn.commit()
     conn.close()
+
+    return "Message from DB: Successfully saved task for today."
+
+def read_todos():
+    current_date = datetime.date.today().strftime('%Y-%m-%d')
+
+    conn = sqlite3.connect('todos.db')
+    c = conn.cursor()
+    c.execute("SELECT task FROM todos WHERE date = ?", (current_date,))
+    tasks = c.fetchall()
+    print(tasks)
+    conn.close()
+
+    return tasks

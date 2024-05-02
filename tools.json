@@ -19,7 +19,7 @@
     {
       "type": "function",
       "function": {
-        "name": "bing_search",
+        "name": "save_todo",
         "description": "Do a web search via Bing",
         "parameters": {
           "type": "object",
@@ -32,5 +32,34 @@
           "required": ["query"]
         }
       }
-    }
+    },
+    {
+        "type": "function",
+        "function": {
+          "name": "save_todo",
+          "description": "Saving in a to do/ a task in a to do list.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string",
+                "description": "The string or description of the new task."
+              }
+            },
+            "required": ["task"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "read_todos",
+          "description": "Reads all to dos/ tasks from a to do list.",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      }
   ]
