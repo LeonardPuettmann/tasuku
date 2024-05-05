@@ -50,30 +50,45 @@ def bing_search(query, market="de-DE", response_size="full") -> str:
         return search_results["webPages"]["value"][0]["snippet"]
 
 
-def save_todo(task: str) -> str:
+def save_task(task: str) -> str:
     """
     @param task: A string with a to do
     @return: Message that function has been executed.
     """
     current_date = datetime.date.today().strftime('%Y-%m-%d')
 
-    conn = sqlite3.connect('todos.db')
+    conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS todos (date TEXT, task TEXT)''')
-    c.execute("INSERT INTO todos VALUES (?, ?)", (current_date, task))
+    c.execute('''CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY, date TEXT, task TEXT)''')
+    c.execute("INSERT INTO todos (date, task) VALUES (?, ?)", (current_date, task))
     conn.commit()
     conn.close()
 
-    return "Message from DB: Successfully saved task for today."
+    return f"Message from DB: Successfully saved task {task} for {current_date}."
 
-def read_todos():
+def read_tasks():
     current_date = datetime.date.today().strftime('%Y-%m-%d')
 
-    conn = sqlite3.connect('todos.db')
+    conn = sqlite3.connect('database.db')
     c = conn.cursor()
+
+    # Create table if it doesn't exist
+    c.execute('''CREATE TABLE IF NOT EXISTS todos (
+                    id INTEGER PRIMARY KEY,
+                    task TEXT NOT NULL,
+                    date TEXT NOT NULL
+                )''')
+
+    c.execute("SELECT COUNT(*) FROM todos WHERE date = ?", (current_date,))
+    num_rows = c.fetchone()[0]
+    if num_rows == 0:
+        return "no current to dos"
+
     c.execute("SELECT task FROM todos WHERE date = ?", (current_date,))
     tasks = c.fetchall()
-    print(tasks)
     conn.close()
 
-    return tasks
+    # Convert tasks to a string
+    tasks_str = ', '.join([task[0] for task in tasks])
+
+    return tasks_str

@@ -1,14 +1,18 @@
 # Use an official Python runtime as the base image
-FROM python:3.9-slim-buster
+FROM python:3.11-slim-bullseye
 
 # Set the working directory in the container to /app
 WORKDIR /app
 
-# Add the current directory contents into the container at /app
-ADD . /app
+# Copy the requirements.txt file
+COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && rm -rf /root/.cache/pip
+
+# Add the current directory contents into the container at /app
+ADD . /app
 
 # Make port 8501 available for Streamlit app
 EXPOSE 8501

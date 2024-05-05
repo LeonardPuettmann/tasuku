@@ -8,7 +8,7 @@ import json
 
 # functions 
 import functools
-from tools import get_stock_price, bing_search, save_todo, read_todos
+from tools import get_stock_price, bing_search, save_task, read_tasks
 
 # Function to reset the state
 def reset_state():
@@ -51,7 +51,7 @@ with st.sidebar:
     # Initialize the model in session state if it's not already set
     st.subheader('Models and parameters')
     if "mistral_model" not in st.session_state:
-        st.session_state["mistral_model"] = 'open-mistral-7b'
+        st.session_state["mistral_model"] = 'mistral-small-latest'
 
     # Always display the dropdown
     model_options = ('open-mistral-7b','open-mixtral-8x22b', 'mistral-small-latest', 'mistral-large-latest')
@@ -60,7 +60,7 @@ with st.sidebar:
     # Section 3: System Prompt Input
     # Add system prompt input
     if "system_prompt" not in st.session_state:
-        st.session_state["system_prompt"] = "You are a helpful assistant called Tasuku (佑). Your job is to be helpful and wait for users instructions. Keep your answer short. Do NOT mention your capabilties or tool use unless the user asks for it. Do NOT generate any commands yourself."
+        st.session_state["system_prompt"] = "You are a helpful assistant called Tasuku (佑). Your job is to be helpful and wait for users instructions. Keep your answer short. Do NOT mention your capabilties or tool use unless the user asks for it. Do NOT generate any commands yourself. You cannot save any tasks yourself and need to do a tool call for this."
     st.text_area('System Prompt', value=st.session_state["system_prompt"], key="system_prompt")
     
     # Model settings
@@ -98,8 +98,8 @@ with open('tools.json') as f:
 names_to_functions = {
     "get_stock_price": functools.partial(get_stock_price),
     "bing_search": functools.partial(bing_search),
-    "save_todo": functools.partial(save_todo),
-    "read_todo": functools.partial(read_todos)
+    "save_task": functools.partial(save_task),
+    "read_tasks": functools.partial(read_tasks)
 }
 
 # Section 5: User Input and Response
